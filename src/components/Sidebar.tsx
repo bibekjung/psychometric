@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Settings, Menu, LogOut } from 'lucide-react';
+import { LayoutDashboard, Menu, LogOut, ListChecks, Users } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { setIsOpen } from '@/slices/sidebarSlice';
@@ -16,7 +16,8 @@ export default function Sidebar() {
       path: '/dashboard',
       icon: <LayoutDashboard size={20} />,
     },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+    { name: 'Quiz', path: '/quiz', icon: <ListChecks size={20} /> },
+    { name: 'User Management', path: '/users', icon: <Users size={20} /> },
   ];
 
   return (
@@ -53,8 +54,8 @@ export default function Sidebar() {
                 `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200
                 ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'bg-[#265a96] text-white shadow-md'
+                    : 'text-gray-300 hover:bg-[#265a96] hover:text-white'
                 }`
               }
             >
