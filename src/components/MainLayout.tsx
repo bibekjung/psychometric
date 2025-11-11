@@ -37,8 +37,8 @@ export default function MainLayout() {
 
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow p-4 flex justify-between items-center relative">
-          <h1 className="text-2xl font-semibold bg-gradient-to-r from-orange-400 to-blue-500 bg-clip-text text-transparent">
-            INTRASITE
+          <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#00C6FF] via-[#0072FF] to-[#004AAD] bg-clip-text text-transparent tracking-[0.15em] font-[Poppins]">
+            PSYCHOMETRIC
           </h1>
 
           <div className="relative" ref={dropdownRef}>

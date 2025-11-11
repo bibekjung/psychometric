@@ -43,13 +43,15 @@ const LoginForm = () => {
               className="h-32 w-auto object-contain"
             />
             <div className="flex flex-col items-center text-center max-w-sm">
-              <h1 className="text-xl md:text-3xl font-bold mb-4">INTRASITE</h1>
+              <h1 className="text-xl md:text-3xl font-bold mb-4">
+                PSYCHOMETRIC
+              </h1>
               <p className="text-blue-100 text-sm md:text-base leading-relaxed">
-                Please sign in to continue to dashboard
+                Please sign in to continue
               </p>
             </div>
           </div>
-          <div className="absolute inset-0 bg-blue-500 -z-10"></div>
+          <div className="absolute inset-0 bg-[#1A4B84] -z-10"></div>
         </div>
         <div
           className="absolute top-0 right-0 w-1/2 h-full px-6 py-8 md:px-12 md:py-10 flex flex-col justify-center bg-white transition-transform duration-1000 ease-in-out overflow-y-auto"
@@ -117,7 +119,7 @@ const LoginForm = () => {
                 <button
                   type="submit"
                   onClick={handleLogin}
-                  className="w-full bg-blue-600 text-white py-3 md:py-4 rounded-lg font-medium hover:bg-blue-700 transition-all duration-300 text-sm md:text-base"
+                  className="w-full bg-[#1A4B84] text-white py-3 md:py-4 rounded-lg font-medium hover:bg-[#2f64a2] transition-all duration-300 text-sm md:text-base"
                 >
                   Login To Dashboard
                 </button>

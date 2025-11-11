@@ -1,13 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Settings,
-  Menu,
-  LogOut,
-  IdCard,
-  NotebookPen,
-  Scale,
-} from 'lucide-react';
+import { LayoutDashboard, Settings, Menu, LogOut } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { setIsOpen } from '@/slices/sidebarSlice';
@@ -24,29 +16,24 @@ export default function Sidebar() {
       path: '/dashboard',
       icon: <LayoutDashboard size={20} />,
     },
-    { name: 'NID Search', path: '/nid-search', icon: <IdCard size={20} /> },
-    { name: 'Directory', path: '/directory', icon: <NotebookPen size={20} /> },
-    { name: 'Policy Document', path: '/policies', icon: <Scale size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 
   return (
-    // <div
-    //   className={`bg-gradient-to-b from-gray-900 to-gray-900 text-white flex flex-col justify-between
-    //   transition-all duration-300 ${isOpen ? 'w-64' : 'w-24'} h-screen shadow-lg`}
-    // >
-    
     <div
-      className={`bg-[#283A47] text-white flex flex-col justify-between 
+      className={`bg-[#1A4B84] text-white flex flex-col justify-between 
   transition-all duration-300 ${isOpen ? 'w-64' : 'w-24'} h-screen shadow-lg`}
     >
       <div>
         <div className="flex items-center justify-between p-3 border-b border-gray-700">
           <img
-            src="/kskl.png"
+            src={isOpen ? '/kskl.png' : '/logo.png'}
             alt="Logo"
-            className={`transition-all object-contain ${isOpen ? 'h-10 w-auto' : 'h-10 w-10'}`}
+            className={`object-contain transition-all duration-300 ${
+              isOpen ? 'h-10 w-auto' : 'h-10 w-10 mx-auto'
+            }`}
           />
+
           <button
             onClick={() => dispatch(setIsOpen(!isOpen))}
             className="text-gray-300 hover:text-white focus:outline-none"
@@ -91,14 +78,6 @@ export default function Sidebar() {
           <LogOut size={20} />
           <span className={`${isOpen ? 'block' : 'hidden'}`}>Logout</span>
         </button>
-
-        <p
-          className={`text-xs text-gray-500 text-center py-2 ${
-            isOpen ? 'block' : 'hidden'
-          }`}
-        >
-          © 2025 CKYC
-        </p>
       </div>
     </div>
   );
