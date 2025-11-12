@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 
 type AnswerOption = {
   id: string;
@@ -133,6 +134,9 @@ export default function Quiz() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [animating, setAnimating] = useState<'none' | 'next' | 'prev'>('none');
+  const [timeRemaining, setTimeRemaining] = useState(30);
+  const [_isTimerActive, setIsTimerActive] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const current = questions[currentIndex];
   const selected = answers[current?.id] ?? '';
@@ -141,18 +145,98 @@ export default function Quiz() {
   const canGoNext = selected && currentIndex < questions.length - 1;
   const isLast = currentIndex === questions.length - 1;
 
+  const handleChoose = (optionId: string) => {
+    if (!current) return;
+    setAnswers((prev) => ({ ...prev, [current.id]: optionId }));
+  };
+
+  // Timer effect
+  useEffect(() => {
+    // Reset timer when question changes
+    setTimeRemaining(20);
+    setIsTimerActive(true);
+
+    // Clear existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Get current question ID for closure
+    const currentQuestionId = current?.id;
+
+    // Start new timer only if no answer is selected yet
+    if (!selected && currentQuestionId) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            setIsTimerActive(false);
+            // Auto-select neutral if no answer
+            setAnswers((prev) => {
+              // Only auto-select if still no answer for this question
+              if (!prev[currentQuestionId]) {
+                return { ...prev, [currentQuestionId]: 'a3' };
+              }
+              return prev;
+            });
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentIndex, current?.id, selected]);
+
+  // Auto-advance when time runs out and answer is selected
+  useEffect(() => {
+    if (timeRemaining === 0 && selected && !isLast) {
+      const timeout = setTimeout(() => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setAnimating('next');
+        setTimeout(() => {
+          setCurrentIndex((idx) => idx + 1);
+          setAnimating('none');
+          setIsTimerActive(true);
+        }, 220);
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [timeRemaining, selected, isLast]);
+
+  // Pause timer when answer is selected
+  useEffect(() => {
+    if (selected) {
+      setIsTimerActive(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+  }, [selected]);
+
   const go = (dir: 'next' | 'prev') => {
     if (dir === 'next' && !selected) return;
+    // Clear timer when navigating
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     setAnimating(dir);
     window.setTimeout(() => {
       setCurrentIndex((idx) => (dir === 'next' ? idx + 1 : idx - 1));
       setAnimating('none');
+      setIsTimerActive(true);
     }, 220);
-  };
-
-  const handleChoose = (optionId: string) => {
-    if (!current) return;
-    setAnswers((prev) => ({ ...prev, [current.id]: optionId }));
   };
 
   const score = useMemo(() => {
@@ -182,8 +266,65 @@ export default function Quiz() {
       <Card className="bg-gradient-to-br from-[#F6FBFF] via-white to-[#F3F6FA] border border-[#E6EEF7]">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Question {currentIndex + 1} of {questions.length}
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                Question {currentIndex + 1} of {questions.length}
+              </div>
+              {/* Professional Timer Display - Right of Question */}
+              <div className="flex items-center gap-2">
+                <div className="relative w-14 h-14">
+                  {/* Circular Progress */}
+                  <svg className="transform -rotate-90 w-14 h-14">
+                    <circle
+                      cx="28"
+                      cy="28"
+                      r="24"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      fill="none"
+                      className="text-gray-100"
+                    />
+                    <circle
+                      cx="28"
+                      cy="28"
+                      r="24"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 24}`}
+                      strokeDashoffset={`${2 * Math.PI * 24 * (1 - timeRemaining / 20)}`}
+                      strokeLinecap="round"
+                      className={`transition-all duration-1000 ${
+                        timeRemaining <= 5
+                          ? 'text-red-500'
+                          : timeRemaining <= 8
+                            ? 'text-orange-500'
+                            : 'text-[#1A4B84]'
+                      }`}
+                    />
+                  </svg>
+                  {/* Time Display */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className={`text-xs font-bold ${
+                        timeRemaining <= 5
+                          ? 'text-red-500'
+                          : timeRemaining <= 8
+                            ? 'text-orange-500'
+                            : 'text-[#1A4B84]'
+                      }`}
+                    >
+                      {timeRemaining}
+                    </span>
+                  </div>
+                </div>
+                {timeRemaining <= 5 && timeRemaining > 0 && (
+                  <div className="flex items-center gap-1 text-red-500 animate-pulse">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">Low time!</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="h-2 w-40 bg-gray-200 rounded-full overflow-hidden">
               <div
