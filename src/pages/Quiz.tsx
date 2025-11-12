@@ -1,7 +1,17 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
+import { RootState } from '@/store/store';
+import {
+  updateAnswer,
+  setAnimating,
+  setTimeRemaining,
+  setIsTimerActive,
+  goNext,
+  goPrev,
+} from '@/slices/quizSlice';
 
 type AnswerOption = {
   id: string;
@@ -19,123 +29,312 @@ export default function Quiz() {
     () => [
       {
         id: 'q1',
-        text: 'I remain calm under pressure.',
+        text: 'Mr. X saw a 100 Rs. note falling from a man’s pocket and decides to keep it.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q2',
-        text: 'I enjoy solving complex problems.',
+        text: 'Mr. X saw a 100 Rs. note falling from a man’s pocket and decides to keep it.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q3',
-        text: 'I prefer planning ahead rather than being spontaneous.',
+        text: 'Mr. X is often late for meetings/ appointments as he gets delayed due to traffic or other important work.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q4',
-        text: 'I adapt quickly when plans change unexpectedly.',
+        text: 'Mr. X has a work trip to a nearby town next week. He prefers to pack on the day of leaving.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q5',
-        text: 'I communicate my ideas clearly to others.',
+        text: 'Mr. X feels comfortable with his financial situation and doesn’t want to take any risks to improve his business.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q6',
-        text: 'I actively seek feedback to improve.',
+        text: 'Mr. X damages work equipment and says it broke due to poor quality.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q7',
-        text: 'I prefer working in a team rather than alone.',
+        text: 'Mr. X forgot to bring the groceries on his way back home from work. He said it’s because no one reminded him.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q8',
-        text: 'I stay motivated even when tasks are repetitive.',
+        text: 'Mr. X faces difficulty while doing a task. He prefers to not waste his time and moves to the next task.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q9',
-        text: 'I make decisions based on data rather than intuition.',
+        text: 'Mr. X does not believe in learning new business/work methods because the old methods are working well.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
       {
         id: 'q10',
-        text: 'I handle constructive criticism without feeling discouraged.',
+        text: 'Mr. X often forgets to put things back in their proper place.',
         options: [
-          { id: 'a1', label: 'Strongly disagree' },
-          { id: 'a2', label: 'Disagree' },
-          { id: 'a3', label: 'Neutral' },
-          { id: 'a4', label: 'Agree' },
-          { id: 'a5', label: 'Strongly agree' },
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q11',
+        text: 'Mr. X damaged a work equipment and kept quiet when no one noticed it.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q12',
+        text: 'Mr. X always prefers to purchase quality items even if it costs more money.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q13',
+        text: 'When Mr. X is asked to do something, he prefers to do it as per his convenience.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q14',
+        text: 'Mr. X strongly believes in destiny and doesn’t stress about the future.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q15',
+        text: 'Mr. X’s friend suffers a major loss during floods/landslides. Mr. X asks him to have faith in his destiny but doesn’t offer any monetary help.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q16',
+        text: 'Mr. X spills water on the floor. When asked to clean up, he says it will dry on its own soon.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q17',
+        text: 'Mr. X chooses to invest all his savings in gold as soon as an opportunity arises.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q18',
+        text: 'Mr. X believed he was having trouble working under a young supervisor so he requested to work under an elder supervisor.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q19',
+        text: 'Mr. X thought his documents went missing because someone must have moved them.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q20',
+        text: 'Mr. X doesn’t prefer to take bank loan. He uses his savings and borrows money from a friend to buy his land.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q21',
+        text: 'It is a matter of fate whether or not a person is able to save some money for their old age.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q22',
+        text: 'Mr. X’s son scored well in his exam and believes it happened due to his good luck.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q23',
+        text: 'Mr. X is offered a business plan in which the more he invests the more money he will earn later. So, X decides to invest all his money.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q24',
+        text: 'Mr. X chooses to spend all his money on family because he hopes one of his sons will take care of him.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q25',
+        text: 'Mr. X believes men should not participate in most of the housework.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q26',
+        text: 'Mr. X prefers to spend his money now than save it for the future.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q27',
+        text: 'Sometimes, you think of your needs over others’ needs.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q28',
+        text: 'You sometimes ignore people who are rude to you.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q29',
+        text: 'You have sometimes used excuses to avoid going to some place which you didn’t want to go.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
+        ],
+      },
+      {
+        id: 'q30',
+        text: 'You have never gotten jealous of other people’s good fortune.',
+        options: [
+          { id: 'a1', label: 'Acceptable' },
+          { id: 'a2', label: 'Somewhat Acceptable' },
+          { id: 'a3', label: 'Somewhat Unacceptable' },
+          { id: 'a4', label: 'Unacceptable' },
         ],
       },
     ],
     [],
   );
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [animating, setAnimating] = useState<'none' | 'next' | 'prev'>('none');
-  const [timeRemaining, setTimeRemaining] = useState(30);
-  const [_isTimerActive, setIsTimerActive] = useState(true);
+  const dispatch = useDispatch();
+  const { currentIndex, answers, animating, timeRemaining } = useSelector(
+    (state: RootState) => state.quiz,
+  );
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const current = questions[currentIndex];
@@ -147,14 +346,14 @@ export default function Quiz() {
 
   const handleChoose = (optionId: string) => {
     if (!current) return;
-    setAnswers((prev) => ({ ...prev, [current.id]: optionId }));
+    dispatch(updateAnswer({ questionId: current.id, answerId: optionId }));
   };
 
   // Timer effect
   useEffect(() => {
     // Reset timer when question changes
-    setTimeRemaining(20);
-    setIsTimerActive(true);
+    dispatch(setTimeRemaining(20));
+    dispatch(setIsTimerActive(true));
 
     // Clear existing timer
     if (timerRef.current) {
@@ -167,22 +366,23 @@ export default function Quiz() {
 
     // Start new timer only if no answer is selected yet
     if (!selected && currentQuestionId) {
+      let localTime = 20;
       timerRef.current = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            setIsTimerActive(false);
-            // Auto-select neutral if no answer
-            setAnswers((prev) => {
-              // Only auto-select if still no answer for this question
-              if (!prev[currentQuestionId]) {
-                return { ...prev, [currentQuestionId]: 'a3' };
-              }
-              return prev;
-            });
-            return 0;
+        localTime -= 1;
+        if (localTime <= 0) {
+          dispatch(setIsTimerActive(false));
+          dispatch(setTimeRemaining(0));
+          // Auto-select neutral if no answer
+          dispatch(
+            updateAnswer({ questionId: currentQuestionId, answerId: 'a3' }),
+          );
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
           }
-          return prev - 1;
-        });
+        } else {
+          dispatch(setTimeRemaining(localTime));
+        }
       }, 1000);
     }
 
@@ -192,7 +392,7 @@ export default function Quiz() {
         timerRef.current = null;
       }
     };
-  }, [currentIndex, current?.id, selected]);
+  }, [currentIndex, current?.id, selected, dispatch]);
 
   // Auto-advance when time runs out and answer is selected
   useEffect(() => {
@@ -202,27 +402,27 @@ export default function Quiz() {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
-        setAnimating('next');
+        dispatch(setAnimating('next'));
         setTimeout(() => {
-          setCurrentIndex((idx) => idx + 1);
-          setAnimating('none');
-          setIsTimerActive(true);
+          dispatch(goNext());
+          dispatch(setAnimating('none'));
+          dispatch(setIsTimerActive(true));
         }, 220);
       }, 500);
       return () => clearTimeout(timeout);
     }
-  }, [timeRemaining, selected, isLast]);
+  }, [timeRemaining, selected, isLast, dispatch]);
 
   // Pause timer when answer is selected
   useEffect(() => {
     if (selected) {
-      setIsTimerActive(false);
+      dispatch(setIsTimerActive(false));
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     }
-  }, [selected]);
+  }, [selected, dispatch]);
 
   const go = (dir: 'next' | 'prev') => {
     if (dir === 'next' && !selected) return;
@@ -231,11 +431,15 @@ export default function Quiz() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    setAnimating(dir);
+    dispatch(setAnimating(dir));
     window.setTimeout(() => {
-      setCurrentIndex((idx) => (dir === 'next' ? idx + 1 : idx - 1));
-      setAnimating('none');
-      setIsTimerActive(true);
+      if (dir === 'next') {
+        dispatch(goNext());
+      } else {
+        dispatch(goPrev());
+      }
+      dispatch(setAnimating('none'));
+      dispatch(setIsTimerActive(true));
     }, 220);
   };
 
