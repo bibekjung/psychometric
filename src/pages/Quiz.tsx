@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
-import { RootState } from '@/store/store';
+import { RootState, store } from '@/store/store';
 import {
   updateAnswer,
   setAnimating,
@@ -341,49 +341,48 @@ export default function Quiz() {
   const selected = answers[current?.id] ?? '';
 
   const canGoPrev = currentIndex > 0;
-  const canGoNext = selected && currentIndex < questions.length - 1;
+  const canGoNext = timeRemaining > 0 && currentIndex < questions.length - 1;
   const isLast = currentIndex === questions.length - 1;
+
+  const startTimer = (questionId: string) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    dispatch(setTimeRemaining(30));
+    dispatch(setIsTimerActive(true));
+
+    let localTime = 30;
+    timerRef.current = setInterval(() => {
+      localTime -= 1;
+      if (localTime <= 0) {
+        dispatch(setIsTimerActive(false));
+        dispatch(setTimeRemaining(0));
+
+        const state = store.getState();
+        const currentAnswers = state.quiz.answers;
+        if (!currentAnswers[questionId]) {
+          dispatch(updateAnswer({ questionId: questionId, answerId: 'a3' }));
+        }
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      } else {
+        dispatch(setTimeRemaining(localTime));
+      }
+    }, 1000);
+  };
 
   const handleChoose = (optionId: string) => {
     if (!current) return;
     dispatch(updateAnswer({ questionId: current.id, answerId: optionId }));
   };
 
-  // Timer effect
   useEffect(() => {
-    // Reset timer when question changes
-    dispatch(setTimeRemaining(20));
-    dispatch(setIsTimerActive(true));
-
-    // Clear existing timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    // Get current question ID for closure
-    const currentQuestionId = current?.id;
-
-    // Start new timer only if no answer is selected yet
-    if (!selected && currentQuestionId) {
-      let localTime = 20;
-      timerRef.current = setInterval(() => {
-        localTime -= 1;
-        if (localTime <= 0) {
-          dispatch(setIsTimerActive(false));
-          dispatch(setTimeRemaining(0));
-          // Auto-select neutral if no answer
-          dispatch(
-            updateAnswer({ questionId: currentQuestionId, answerId: 'a3' }),
-          );
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-        } else {
-          dispatch(setTimeRemaining(localTime));
-        }
-      }, 1000);
+    if (current?.id) {
+      startTimer(current.id);
     }
 
     return () => {
@@ -392,11 +391,10 @@ export default function Quiz() {
         timerRef.current = null;
       }
     };
-  }, [currentIndex, current?.id, selected, dispatch]);
+  }, [currentIndex, current?.id]);
 
-  // Auto-advance when time runs out and answer is selected
   useEffect(() => {
-    if (timeRemaining === 0 && selected && !isLast) {
+    if (timeRemaining === 0 && !isLast) {
       const timeout = setTimeout(() => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
@@ -411,22 +409,10 @@ export default function Quiz() {
       }, 500);
       return () => clearTimeout(timeout);
     }
-  }, [timeRemaining, selected, isLast, dispatch]);
-
-  // Pause timer when answer is selected
-  useEffect(() => {
-    if (selected) {
-      dispatch(setIsTimerActive(false));
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-  }, [selected, dispatch]);
+  }, [timeRemaining, isLast, dispatch]);
 
   const go = (dir: 'next' | 'prev') => {
-    if (dir === 'next' && !selected) return;
-    // Clear timer when navigating
+    if (dir === 'next' && timeRemaining === 0) return;
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -474,10 +460,8 @@ export default function Quiz() {
               <div className="text-sm text-gray-600">
                 Question {currentIndex + 1} of {questions.length}
               </div>
-              {/* Professional Timer Display - Right of Question */}
               <div className="flex items-center gap-2">
                 <div className="relative w-14 h-14">
-                  {/* Circular Progress */}
                   <svg className="transform -rotate-90 w-14 h-14">
                     <circle
                       cx="28"
@@ -496,7 +480,7 @@ export default function Quiz() {
                       strokeWidth="3.5"
                       fill="none"
                       strokeDasharray={`${2 * Math.PI * 24}`}
-                      strokeDashoffset={`${2 * Math.PI * 24 * (1 - timeRemaining / 20)}`}
+                      strokeDashoffset={`${2 * Math.PI * 24 * (1 - timeRemaining / 30)}`}
                       strokeLinecap="round"
                       className={`transition-all duration-1000 ${
                         timeRemaining <= 5
@@ -507,7 +491,6 @@ export default function Quiz() {
                       }`}
                     />
                   </svg>
-                  {/* Time Display */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span
                       className={`text-xs font-bold ${
