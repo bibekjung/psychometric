@@ -22,13 +22,17 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`bg-[#1A4B84] text-white flex flex-col justify-between 
+      className={`bg-[#235748] text-white flex flex-col justify-between 
   transition-all duration-300 ${isOpen ? 'w-64' : 'w-24'} h-screen shadow-lg`}
     >
       <div>
         <div className="flex items-center justify-between p-3 border-b border-gray-700">
           <img
-            src={isOpen ? '/kskl.png' : '/logo.png'}
+            src={
+              isOpen
+                ? `${import.meta.env.BASE_URL}kskl.png`
+                : `${import.meta.env.BASE_URL}logo.png`
+            }
             alt="Logo"
             className={`object-contain transition-all duration-300 ${
               isOpen ? 'h-10 w-auto' : 'h-10 w-10 mx-auto'
@@ -54,8 +58,8 @@ export default function Sidebar() {
                 `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200
                 ${
                   isActive
-                    ? 'bg-[#265a96] text-white shadow-md'
-                    : 'text-gray-300 hover:bg-[#265a96] hover:text-white'
+                    ? 'bg-[#418773] text-white shadow-md'
+                    : 'text-gray-300 hover:bg-[#418773] hover:text-white'
                 }`
               }
             >
