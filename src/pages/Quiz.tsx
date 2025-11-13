@@ -586,10 +586,10 @@ export default function Quiz() {
                       <Clock className="h-6 w-6 text-green-600" />
                     </div>
                     <h3 className="font-semibold text-gray-800 mb-1">
-                      60 Seconds
+                      Take your time
                     </h3>
                     <p className="text-sm text-gray-500 text-center">
-                      Per question
+                      for the question
                     </p>
                   </div>
 
