@@ -1,21 +1,12 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertCircle,
-  Play,
-  Clock,
-  FileText,
-  CheckCircle2,
-  Timer,
-} from 'lucide-react';
+import { Play, Clock, FileText, CheckCircle2 } from 'lucide-react';
 import { RootState, store } from '@/store/store';
 import {
   updateAnswer,
   setAnimating,
-  setTimeRemaining,
-  setIsTimerActive,
   setTotalTimeElapsed,
   setQuestionTimeElapsed,
   goNext,
@@ -407,19 +398,20 @@ export default function Quiz() {
     currentIndex,
     answers,
     animating,
-    timeRemaining,
     quizStarted,
     totalTimeElapsed,
+    questionTimeElapsed,
     canGoBack,
   } = useSelector((state: RootState) => state.quiz);
   const totalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const [hoveredCounter, setHoveredCounter] = useState(false);
 
   const current = questions[currentIndex];
   const selected = answers[current?.id] ?? '';
 
-  const canGoNext =
-    selected !== '' && timeRemaining > 0 && currentIndex < questions.length - 1;
+  const canGoNext = selected !== '' && currentIndex < questions.length - 1;
   const isLast = currentIndex === questions.length - 1;
   const canGoPrev = canGoBack && currentIndex > 0;
 
@@ -445,37 +437,13 @@ export default function Quiz() {
       questionTimerRef.current = null;
     }
 
+    // Reset question timer when starting a new question
     dispatch(setQuestionTimeElapsed(0));
-    dispatch(setTimeRemaining(60));
-    dispatch(setIsTimerActive(true));
 
-    let localTime = 60;
-    let questionTime = 0;
-
+    // Track elapsed time for this question (counting up)
     questionTimerRef.current = setInterval(() => {
-      questionTime += 1;
-      localTime -= 1;
-
-      dispatch(setQuestionTimeElapsed(questionTime));
-
-      if (localTime <= 0) {
-        dispatch(setIsTimerActive(false));
-        dispatch(setTimeRemaining(0));
-
-        const state = store.getState();
-        const currentAnswers = state.quiz.answers;
-        if (!currentAnswers[current?.id || '']) {
-          dispatch(
-            updateAnswer({ questionId: current?.id || '', answerId: 'a3' }),
-          );
-        }
-        if (questionTimerRef.current) {
-          clearInterval(questionTimerRef.current);
-          questionTimerRef.current = null;
-        }
-      } else {
-        dispatch(setTimeRemaining(localTime));
-      }
+      const state = store.getState();
+      dispatch(setQuestionTimeElapsed(state.quiz.questionTimeElapsed + 1));
     }, 1000);
   };
 
@@ -497,26 +465,8 @@ export default function Quiz() {
     };
   }, [currentIndex, current?.id, quizStarted]);
 
-  useEffect(() => {
-    if (timeRemaining === 0 && !isLast) {
-      const timeout = setTimeout(() => {
-        if (questionTimerRef.current) {
-          clearInterval(questionTimerRef.current);
-          questionTimerRef.current = null;
-        }
-        dispatch(setAnimating('next'));
-        setTimeout(() => {
-          dispatch(goNext());
-          dispatch(setAnimating('none'));
-          dispatch(setIsTimerActive(true));
-        }, 220);
-      }, 500);
-      return () => clearTimeout(timeout);
-    }
-  }, [timeRemaining, isLast, dispatch]);
-
   const go = (dir: 'next' | 'prev') => {
-    if (dir === 'next' && (timeRemaining === 0 || selected === '')) return;
+    if (dir === 'next' && selected === '') return;
     if (dir === 'prev' && !canGoPrev) return;
     if (questionTimerRef.current) {
       clearInterval(questionTimerRef.current);
@@ -530,7 +480,6 @@ export default function Quiz() {
         dispatch(goPrev());
       }
       dispatch(setAnimating('none'));
-      dispatch(setIsTimerActive(true));
     }, 220);
   };
 
@@ -614,9 +563,14 @@ export default function Quiz() {
                     <ul className="text-left text-sm text-gray-700 space-y-2 list-disc list-inside">
                       <li>Read each scenario carefully</li>
                       <li>Select the option that best reflects your opinion</li>
-                      <li>You have 60 seconds per question</li>
+                      <li>
+                        Take your time to answer each question thoughtfully
+                      </li>
                       <li>Answer honestly for accurate results</li>
-                      <li>You can change your answer before time runs out</li>
+                      <li>
+                        You can change your answer before moving to the next
+                        question
+                      </li>
                     </ul>
                   </div>
 
@@ -667,58 +621,24 @@ export default function Quiz() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600">
-                Question {currentIndex + 1} of {questions.length}
+              <div
+                className={`text-sm font-medium transition-all duration-300 cursor-default ${
+                  hoveredCounter
+                    ? 'text-[#1A4B84] scale-110 font-semibold'
+                    : 'text-gray-600'
+                }`}
+                onMouseEnter={() => setHoveredCounter(true)}
+                onMouseLeave={() => setHoveredCounter(false)}
+              >
+                <span className="inline-block transition-transform duration-300">
+                  Question {currentIndex + 1} of {questions.length}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="relative w-10 h-10">
-                  <svg className="transform -rotate-90 w-10 h-10">
-                    <circle
-                      cx="20"
-                      cy="20"
-                      r="16"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      fill="none"
-                      className="text-gray-100"
-                    />
-                    <circle
-                      cx="20"
-                      cy="20"
-                      r="16"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 16}`}
-                      strokeDashoffset={`${2 * Math.PI * 16 * (1 - timeRemaining / 60)}`}
-                      strokeLinecap="round"
-                      className={`transition-all duration-1000 ${
-                        timeRemaining <= 5
-                          ? 'text-red-500'
-                          : timeRemaining <= 8
-                            ? 'text-orange-500'
-                            : 'text-[#1A4B84]'
-                      }`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Timer
-                      className={`h-4 w-4 ${
-                        timeRemaining <= 5
-                          ? 'text-red-500'
-                          : timeRemaining <= 8
-                            ? 'text-orange-500'
-                            : 'text-[#1A4B84]'
-                      }`}
-                    />
-                  </div>
-                </div>
-                {timeRemaining <= 5 && timeRemaining > 0 && (
-                  <div className="flex items-center gap-1 text-red-500 animate-pulse">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span className="text-xs font-medium">Low time!</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <Clock className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {formatTime(questionTimeElapsed)}
+                </span>
               </div>
             </div>
             <div className="h-2 w-40 bg-gray-200 rounded-full overflow-hidden">
@@ -757,25 +677,49 @@ export default function Quiz() {
             <div className="grid gap-3">
               {current.options.map((opt) => {
                 const isActive = selected === opt.id;
+                const isHovered = hoveredOption === opt.id;
                 return (
                   <label
                     key={opt.id}
                     className={[
                       'flex items-center justify-between rounded-lg border px-4 py-3 cursor-pointer',
-                      'transition-all duration-200',
+                      'transition-all duration-300 ease-in-out',
+                      'transform',
                       isActive
-                        ? 'border-[#1A4B84] bg-[#EAF3FF]'
-                        : 'border-gray-200 hover:border-[#9EC9FF] hover:bg-[#F7FAFF]',
+                        ? 'border-[#1A4B84] bg-[#EAF3FF] shadow-md'
+                        : isHovered
+                          ? 'border-[#1A4B84] bg-gradient-to-r from-[#F0F7FF] to-[#E8F3FF] shadow-lg scale-[1.02] -translate-y-0.5'
+                          : 'border-gray-200 bg-white hover:border-[#9EC9FF] hover:bg-[#F7FAFF]',
                     ].join(' ')}
+                    onMouseEnter={() => setHoveredOption(opt.id)}
+                    onMouseLeave={() => setHoveredOption(null)}
                   >
-                    <span className="text-gray-800">{opt.label}</span>
-                    <input
-                      type="radio"
-                      name={`q-${current.id}`}
-                      className="h-4 w-4 accent-[#1A4B84]"
-                      checked={isActive}
-                      onChange={() => handleChoose(opt.id)}
-                    />
+                    <span
+                      className={`text-gray-800 transition-all duration-300 ${
+                        isHovered ? 'font-medium text-[#1A4B84]' : ''
+                      }`}
+                    >
+                      {opt.label}
+                    </span>
+                    <div className="relative">
+                      <div
+                        className={`absolute inset-0 rounded-full transition-all duration-300 ${
+                          isHovered
+                            ? 'bg-[#1A4B84] bg-opacity-20 scale-150'
+                            : ''
+                        }`}
+                      />
+                      <input
+                        type="radio"
+                        name={`q-${current.id}`}
+                        className="h-4 w-4 accent-[#1A4B84] relative z-10 transition-transform duration-300"
+                        checked={isActive}
+                        onChange={() => handleChoose(opt.id)}
+                        style={{
+                          transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+                        }}
+                      />
+                    </div>
                   </label>
                 );
               })}
